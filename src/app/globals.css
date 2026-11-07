@@ -1,0 +1,69 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --brand-primary: #5145CD;
+  --brand-primary-hover: #4338B8;
+  --brand-accent: #7868F6;
+  --brand-deep: #3526A8;
+  --brand-lavender: #EDEBFF;
+  
+  --app-bg: #F7F8FC;
+  --app-surface: #FFFFFF;
+  --app-card: #FFFFFF;
+  --app-border: #E7E9F0;
+  
+  --text-primary: #17213A;
+  --text-secondary: #667085;
+  --text-muted: #8F9BB3;
+  
+  --status-success: #16A779;
+  --status-warning: #E5A32A;
+  --status-error: #DC5260;
+  --status-info: #3486D9;
+}
+
+/* Accessible focus ring */
+*:focus-visible {
+  outline: 2px solid var(--brand-accent);
+  outline-offset: 2px;
+}
+
+body {
+  color: var(--text-primary);
+  background: var(--app-bg);
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #D0D5DD;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #98A2B3;
+}
+
+/* Tabular numerals for stats */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
