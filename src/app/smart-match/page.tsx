@@ -35,7 +35,7 @@ const MatchCard = React.memo(function MatchCard({
   onToggleSave,
 }: MatchCardProps) {
   return (
-    <div className="bg-white rounded-3xl border border-[#E7E9F0] hover:border-[#7868F6]/40 p-6 shadow-card hover:shadow-card-hover transition-all duration-200 space-y-5">
+    <div className="bg-white rounded-3xl border border-[#E7E9F0] hover:border-[#7868F6]/40 p-6 shadow-card hover:shadow-card-hover transition-all duration-200 space-y-5 [content-visibility:auto] [contain-intrinsic-size:auto_320px]">
       {/* Header: Name, Provider, Score Pill, Bookmark */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
         <div className="space-y-1.5 flex-1 min-w-0">
