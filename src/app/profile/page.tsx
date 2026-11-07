@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
 import { useGrantly } from '@/context/GrantlyContext';
 import { StudentProfile, EducationLevel, AcademicStream } from '@/types';
+import { validateProfileForm } from '@/lib/validations/profile';
 import {
   User,
   GraduationCap,
@@ -24,6 +25,7 @@ export default function ProfilePage() {
 
   const [formData, setFormData] = useState<StudentProfile>(profile);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [formFeedback, setFormFeedback] = useState<string>('');
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   const educationLevels: EducationLevel[] = [
@@ -59,30 +61,24 @@ export default function ProfilePage() {
 
   const categories = ['General', 'OBC', 'SC', 'ST', 'EWS'];
 
-  const validate = (): boolean => {
-    const newErrors: Record<string, string> = {};
-    if (!formData.fullName.trim()) newErrors.fullName = 'Full name is required';
-    if (!formData.email.trim() || !formData.email.includes('@')) {
-      newErrors.email = 'Valid academic/personal email is required';
-    }
-    if (!formData.institution.trim()) newErrors.institution = 'Institution is required';
-    if (!formData.course.trim()) newErrors.course = 'Course name is required';
-    if (formData.academicScore < 0 || formData.academicScore > 100) {
-      newErrors.academicScore = 'Academic score must be between 0 and 100%';
-    }
-    if (formData.familyIncome < 0) {
-      newErrors.familyIncome = 'Family income must be 0 or positive';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validate()) return;
+    const result = validateProfileForm(formData);
 
-    updateProfile(formData);
+    if (!result.isValid) {
+      setErrors(result.errors);
+      setSaveSuccess(false);
+      setFormFeedback(
+        `Please resolve ${result.errorList.length} required field issue${
+          result.errorList.length > 1 ? 's' : ''
+        } in your profile before saving.`
+      );
+      return;
+    }
+
+    setErrors({});
+    setFormFeedback('');
+    updateProfile(result.validatedData || formData);
     setSaveSuccess(true);
     setTimeout(() => setSaveSuccess(false), 4000);
   };
@@ -122,6 +118,17 @@ export default function ProfilePage() {
             <span className="font-semibold">
               Profile updated successfully! Smart Match engine has recalculated all scholarship alignments.
             </span>
+          </div>
+        )}
+
+        {formFeedback && (
+          <div
+            role="alert"
+            aria-live="assertive"
+            className="p-4 rounded-2xl bg-red-50 border border-red-200 text-[#DC5260] text-xs sm:text-sm flex items-center gap-2 animate-in fade-in duration-200"
+          >
+            <AlertCircle className="w-5 h-5 flex-shrink-0 text-[#DC5260]" />
+            <span className="font-semibold">{formFeedback}</span>
           </div>
         )}
 

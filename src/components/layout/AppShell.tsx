@@ -38,6 +38,14 @@ export function AppShell({ children }: AppShellProps) {
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-[#F7F8FC]">
+      {/* Skip to Main Content Bypass Link (WCAG 2.4.1) */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2.5 focus:rounded-xl focus:bg-[#5145CD] focus:text-white focus:font-bold focus:shadow-elevated focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#5145CD]"
+      >
+        Skip to main content
+      </a>
+
       {/* Desktop Sidebar */}
       <div className="hidden lg:flex h-full flex-shrink-0">
         <Sidebar />
@@ -65,7 +73,7 @@ export function AppShell({ children }: AppShellProps) {
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         <Header onToggleMobileMenu={() => setMobileMenuOpen(!mobileMenuOpen)} />
 
-        <main className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 lg:pb-8">
+        <main id="main-content" tabIndex={-1} className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 lg:pb-8 focus:outline-none">
           <div className="max-w-7xl mx-auto">{children}</div>
         </main>
       </div>

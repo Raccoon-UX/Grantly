@@ -5,8 +5,9 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { AppShell } from '@/components/layout/AppShell';
 import { useGrantly } from '@/context/GrantlyContext';
-import { formatCurrencyINR, formatDate, getDaysRemaining } from '@/lib/utils';
+import { formatCurrencyINR, formatDate, getDaysRemaining, sanitizeExternalUrl } from '@/lib/utils';
 import { ApplicationStatus } from '@/types';
+import { useFocusTrap } from '@/lib/hooks/useFocusTrap';
 import {
   ArrowLeft,
   Bookmark,
@@ -47,16 +48,10 @@ export default function ScholarshipDetailPage() {
   const [appNotes, setAppNotes] = useState('');
   const [showStatusModal, setShowStatusModal] = useState(false);
 
-  // Close modal on Escape key
-  React.useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && showStatusModal) {
-        setShowStatusModal(false);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showStatusModal]);
+  const modalRef = useFocusTrap<HTMLDivElement>({
+    isOpen: showStatusModal,
+    onClose: () => setShowStatusModal(false),
+  });
 
   const scholarship = scholarships.find((s) => s.id === id);
 
@@ -440,10 +435,10 @@ export default function ScholarshipDetailPage() {
             <div className="bg-white rounded-2xl border border-[#E7E9F0] p-6 shadow-card space-y-4">
               <h3 className="text-sm font-bold text-[#17213A]">Take Action</h3>
 
-              {/* Official External Link */}
-              {scholarship.officialUrl ? (
+              {/* Official External Link (Sanitized) */}
+              {sanitizeExternalUrl(scholarship.officialUrl) ? (
                 <a
-                  href={scholarship.officialUrl}
+                  href={sanitizeExternalUrl(scholarship.officialUrl)!}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full py-3 px-4 rounded-xl bg-[#5145CD] hover:bg-[#4338B8] text-white text-xs sm:text-sm font-bold text-center transition-all flex items-center justify-center gap-2 shadow-sm"
@@ -483,7 +478,11 @@ export default function ScholarshipDetailPage() {
             aria-labelledby="status-modal-title"
             className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
           >
-            <div className="bg-white rounded-3xl border border-[#E7E9F0] p-6 max-w-md w-full shadow-elevated space-y-5 animate-in zoom-in-95 duration-150">
+            <div
+              ref={modalRef}
+              tabIndex={-1}
+              className="bg-white rounded-3xl border border-[#E7E9F0] p-6 max-w-md w-full shadow-elevated space-y-5 animate-in zoom-in-95 duration-150 outline-none"
+            >
               <div className="flex items-center justify-between border-b border-[#E7E9F0] pb-3">
                 <h3 id="status-modal-title" className="text-base font-bold text-[#17213A]">
                   Update Application Tracker

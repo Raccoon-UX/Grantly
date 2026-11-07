@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
 import { useGrantly } from '@/context/GrantlyContext';
+import { useFocusTrap } from '@/lib/hooks/useFocusTrap';
 import {
   Settings,
   Bell,
@@ -23,16 +24,10 @@ export default function SettingsPage() {
   const [smartMatchAlerts, setSmartMatchAlerts] = useState(true);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
-  // Close reset confirmation modal on Escape key
-  React.useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && showResetConfirm) {
-        setShowResetConfirm(false);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showResetConfirm]);
+  const resetModalRef = useFocusTrap<HTMLDivElement>({
+    isOpen: showResetConfirm,
+    onClose: () => setShowResetConfirm(false),
+  });
 
   const handleExportData = () => {
     const backup = {
@@ -193,7 +188,11 @@ export default function SettingsPage() {
             aria-labelledby="reset-modal-title"
             className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
           >
-            <div className="bg-white rounded-3xl border border-[#E7E9F0] p-6 max-w-sm w-full shadow-elevated space-y-4">
+            <div
+              ref={resetModalRef}
+              tabIndex={-1}
+              className="bg-white rounded-3xl border border-[#E7E9F0] p-6 max-w-sm w-full shadow-elevated space-y-4 outline-none"
+            >
               <div className="w-12 h-12 rounded-full bg-red-50 text-[#DC5260] flex items-center justify-center mx-auto">
                 <AlertTriangle className="w-6 h-6" />
               </div>

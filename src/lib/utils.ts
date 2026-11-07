@@ -17,6 +17,7 @@ export function formatCurrencyINR(amount: number): string {
 export function formatDate(dateString: string): string {
   try {
     const d = new Date(dateString);
+    if (isNaN(d.getTime())) return dateString;
     return new Intl.DateTimeFormat('en-IN', {
       day: 'numeric',
       month: 'short',
@@ -32,4 +33,18 @@ export function getDaysRemaining(dateString: string): number {
   const now = new Date().getTime();
   const diffMs = target - now;
   return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+}
+
+export function sanitizeExternalUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  const trimmed = url.trim();
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+      return trimmed;
+    }
+    return null;
+  } catch {
+    return null;
+  }
 }

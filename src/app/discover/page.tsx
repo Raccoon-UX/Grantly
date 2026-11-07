@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { EducationLevel, AcademicStream, ScholarshipCategory } from '@/types';
 import { getDaysRemaining } from '@/lib/utils';
+import { useFocusTrap } from '@/lib/hooks/useFocusTrap';
 
 function DiscoverContent() {
   const searchParams = useSearchParams();
@@ -42,16 +43,10 @@ function DiscoverContent() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
-  // Close mobile filter on Escape key
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && mobileFilterOpen) {
-        setMobileFilterOpen(false);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [mobileFilterOpen]);
+  const mobileFilterTrapRef = useFocusTrap<HTMLDivElement>({
+    isOpen: mobileFilterOpen,
+    onClose: () => setMobileFilterOpen(false),
+  });
 
   // Sync initial query from URL search param
   useEffect(() => {
@@ -333,10 +328,12 @@ function DiscoverContent() {
             }`}
           >
             <div
+              ref={mobileFilterOpen ? mobileFilterTrapRef : undefined}
               role={mobileFilterOpen ? 'dialog' : undefined}
               aria-modal={mobileFilterOpen ? 'true' : undefined}
               aria-label="Filter Criteria"
-              className={`bg-white rounded-2xl border border-[#E7E9F0] p-5 shadow-card space-y-6 ${
+              tabIndex={mobileFilterOpen ? -1 : undefined}
+              className={`bg-white rounded-2xl border border-[#E7E9F0] p-5 shadow-card space-y-6 outline-none ${
                 mobileFilterOpen ? 'max-w-md w-full max-h-[90vh] overflow-y-auto' : ''
               }`}
             >
@@ -493,6 +490,30 @@ function DiscoverContent() {
                   value={minAmountFilter}
                   onChange={(e) => setMinAmountFilter(Number(e.target.value))}
                   className="w-full accent-[#5145CD]"
+                />
+              </div>
+
+              {/* Annual Family Income Limit Slider */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs font-bold text-[#17213A]">
+                  <label htmlFor="filter-max-income" className="uppercase tracking-wider flex items-center gap-1 cursor-pointer">
+                    <IndianRupee className="w-3.5 h-3.5 text-[#5145CD]" />
+                    <span>Family Income Limit</span>
+                  </label>
+                  <span className="tabular-nums text-[#5145CD]">
+                    {maxIncomeFilter >= 1000000 ? 'No Limit (All)' : `≤ ₹${maxIncomeFilter.toLocaleString('en-IN')}`}
+                  </span>
+                </div>
+                <input
+                  id="filter-max-income"
+                  type="range"
+                  min="200000"
+                  max="1000000"
+                  step="50000"
+                  value={maxIncomeFilter}
+                  onChange={(e) => setMaxIncomeFilter(Number(e.target.value))}
+                  className="w-full accent-[#5145CD]"
+                  aria-label="Annual family income limit filter"
                 />
               </div>
             </div>

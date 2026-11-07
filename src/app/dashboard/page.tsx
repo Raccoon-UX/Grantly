@@ -233,7 +233,7 @@ export default function DashboardPage() {
                     <p className="text-[11px] text-[#667085]">Next 60 days</p>
                   </div>
                 </div>
-                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-red-50 text-[#DC5260]">
+                <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-200">
                   {stats.upcomingDeadlines.length} Active
                 </span>
               </div>
@@ -250,10 +250,10 @@ export default function DashboardPage() {
                         {scholarship.name}
                       </p>
                       <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full border flex-shrink-0 ${
                           daysRemaining <= 10
-                            ? 'bg-[#DC5260]/10 text-[#DC5260]'
-                            : 'bg-[#E5A32A]/10 text-[#E5A32A]'
+                            ? 'bg-red-50 text-red-700 border-red-200'
+                            : 'bg-amber-50 text-amber-800 border-amber-200'
                         }`}
                       >
                         {daysRemaining === 0 ? 'Today' : `${daysRemaining}d left`}

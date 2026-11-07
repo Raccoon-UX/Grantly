@@ -59,6 +59,9 @@ async function runAudit() {
       if (results.violations.length > 0) {
         results.violations.forEach((v) => {
           console.log(`   - [${v.impact}] ${v.id}: ${v.description}`);
+          v.nodes.forEach((n) => {
+            console.log(`     Target: ${JSON.stringify(n.target)}, HTML: ${n.html}`);
+          });
         });
       }
     }
@@ -106,14 +109,21 @@ async function runAudit() {
   // Step D: Application Status Update on Details
   await page.goto('http://localhost:3000/scholarships/grant-01', { waitUntil: 'networkidle0' });
   await page.waitForSelector('button');
-  const updateBtn = await page.evaluateHandle(() => {
+  const updateClicked = await page.evaluate(() => {
     const btns = Array.from(document.querySelectorAll('button'));
-    return btns.find(b => b.textContent.includes('Update Status') || b.textContent.includes('Add to Application Tracker'));
+    const b = btns.find(x => x.textContent.includes('Update Status') || x.textContent.includes('Add to Application Tracker'));
+    if (b) {
+      b.scrollIntoView();
+      b.click();
+      return true;
+    }
+    return false;
   });
-  if (updateBtn) {
-    await updateBtn.click();
-    await page.waitForSelector('textarea[placeholder*="Application ID"]');
-    await page.type('textarea[placeholder*="Application ID"]', 'QA Verified Submission Note');
+  if (updateClicked) {
+    await page.waitForSelector('[role="dialog"]');
+    await page.waitForSelector('textarea');
+    await page.type('textarea', 'QA Verified Submission Note');
+    await page.waitForSelector('button[type="submit"]');
     await page.click('button[type="submit"]');
     await delay(800);
     console.log('✅ Step D: Application status updated with QA verification note');

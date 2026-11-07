@@ -16,12 +16,16 @@ import {
   Search,
   Filter,
   Info,
+  ChevronDown,
+  ChevronUp,
+  ExternalLink,
 } from 'lucide-react';
 
 export default function DocumentsPage() {
   const { documents, toggleDocumentReady, stats, scholarships } = useGrantly();
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [searchDoc, setSearchDoc] = useState('');
+  const [expandedDocId, setExpandedDocId] = useState<string | null>(null);
 
   const categories = ['Identity', 'Academic', 'Financial', 'Institutional'];
 
@@ -138,6 +142,16 @@ export default function DocumentsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {filteredDocs.map((doc) => {
             const isReady = doc.status === 'ready';
+            const isExpanded = expandedDocId === doc.id;
+
+            // Match actual scholarships requiring this document
+            const matchingScholarships = scholarships.filter((s) =>
+              s.requiredDocuments.some((reqDoc) => {
+                const rLower = reqDoc.toLowerCase();
+                const dLower = doc.title.toLowerCase();
+                return rLower.includes(dLower) || dLower.includes(rLower);
+              })
+            );
 
             return (
               <div
@@ -155,7 +169,7 @@ export default function DocumentsPage() {
                       className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full border transition-all ${
                         isReady
                           ? 'bg-emerald-50 text-[#16A779] border-emerald-200'
-                          : 'bg-amber-50 text-[#E5A32A] border-amber-200 hover:bg-amber-100/60'
+                          : 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100/60'
                       }`}
                       aria-label={`Toggle readiness status for ${doc.title}`}
                     >
@@ -173,25 +187,71 @@ export default function DocumentsPage() {
                       <span className="text-[10px] text-gray-400">({doc.fileSize})</span>
                     </p>
                   ) : (
-                    <p className="text-xs text-amber-700 bg-amber-50/60 p-2 rounded-lg border border-amber-100 flex items-center gap-1.5">
+                    <p className="text-xs text-amber-800 bg-amber-50/60 p-2 rounded-lg border border-amber-100 flex items-center gap-1.5">
                       <Clock className="w-3.5 h-3.5 flex-shrink-0" />
                       <span>{doc.lastUpdated}</span>
                     </p>
                   )}
                 </div>
 
-                {/* Footer: Required For Count & Toggle Action */}
-                <div className="pt-3 border-t border-[#E7E9F0] flex items-center justify-between text-xs">
-                  <span className="text-[#667085]">
-                    Required by <strong className="text-[#17213A]">{doc.requiredForCount}</strong> active scholarships
-                  </span>
+                {/* Footer: Required For Count & Expandable Association */}
+                <div className="pt-3 border-t border-[#E7E9F0] space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <button
+                      onClick={() => setExpandedDocId(isExpanded ? null : doc.id)}
+                      className="inline-flex items-center gap-1.5 text-[#667085] hover:text-[#5145CD] font-medium text-left"
+                      aria-expanded={isExpanded}
+                    >
+                      <span>
+                        Required by <strong className="text-[#17213A]">{matchingScholarships.length || doc.requiredForCount}</strong> scholarships
+                      </span>
+                      {isExpanded ? (
+                        <ChevronUp className="w-3.5 h-3.5 text-[#5145CD]" />
+                      ) : (
+                        <ChevronDown className="w-3.5 h-3.5 text-[#5145CD]" />
+                      )}
+                    </button>
 
-                  <button
-                    onClick={() => toggleDocumentReady(doc.id)}
-                    className="text-xs font-bold text-[#5145CD] hover:underline"
-                  >
-                    {isReady ? 'Mark as Pending' : 'Simulate Ready'}
-                  </button>
+                    <button
+                      onClick={() => toggleDocumentReady(doc.id)}
+                      className="text-xs font-bold text-[#5145CD] hover:underline"
+                    >
+                      {isReady ? 'Mark as Pending' : 'Simulate Ready'}
+                    </button>
+                  </div>
+
+                  {/* Expanded Associated Scholarships List */}
+                  {isExpanded && (
+                    <div className="mt-2 pt-2 border-t border-dashed border-[#E7E9F0] space-y-2 animate-in fade-in duration-150">
+                      <p className="text-[11px] font-bold text-[#17213A] uppercase tracking-wider">
+                        Mandatory For Opportunities:
+                      </p>
+                      {matchingScholarships.length > 0 ? (
+                        <ul className="space-y-1.5 max-h-44 overflow-y-auto pr-1">
+                          {matchingScholarships.map((s) => (
+                            <li
+                              key={s.id}
+                              className="flex items-center justify-between gap-2 p-2 rounded-xl bg-[#F7F8FC] hover:bg-[#EDEBFF]/60 transition-colors text-xs"
+                            >
+                              <Link
+                                href={`/scholarships/${s.id}`}
+                                className="font-semibold text-[#17213A] hover:text-[#5145CD] truncate flex-1"
+                              >
+                                {s.name}
+                              </Link>
+                              <span className="text-[11px] font-bold text-[#5145CD] whitespace-nowrap">
+                                ₹{s.awardAmount.toLocaleString('en-IN')}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-xs text-[#667085] italic">
+                          Required for general state and central scholarship portals.
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             );

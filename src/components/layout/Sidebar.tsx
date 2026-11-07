@@ -140,9 +140,9 @@ export function Sidebar({ onCloseMobile }: SidebarProps) {
 
                     {item.badge && (
                       <span
-                        className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${
+                        className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${
                           isActive
-                            ? 'bg-white/20 text-white border-white/20'
+                            ? 'bg-white text-[#5145CD] border-white'
                             : item.badgeColor || 'bg-[#F7F8FC] text-[#667085] border-[#E7E9F0]'
                         }`}
                       >

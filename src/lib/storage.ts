@@ -1,5 +1,6 @@
 'use client';
 
+import { z } from 'zod';
 import {
   Scholarship,
   StudentProfile,
@@ -14,8 +15,15 @@ import {
   INITIAL_APPLICATIONS,
   INITIAL_SAVED_SCHOLARSHIPS,
 } from '@/data/demo-profile';
+import {
+  ScholarshipSchema,
+  StudentProfileSchema,
+  DocumentItemSchema,
+  ApplicationRecordSchema,
+  SavedIdsSchema,
+} from './validations/schemas';
 
-const STORAGE_KEYS = {
+export const STORAGE_KEYS = {
   SCHOLARSHIPS: 'grantly_scholarships_v1',
   PROFILE: 'grantly_profile_v1',
   DOCUMENTS: 'grantly_documents_v1',
@@ -23,21 +31,37 @@ const STORAGE_KEYS = {
   SAVED: 'grantly_saved_v1',
   THEME: 'grantly_theme_v1',
   NOTIFICATION_PREFS: 'grantly_notifs_v1',
-};
+} as const;
 
-function safeGet<T>(key: string, defaultValue: T): T {
+export function safeGet<T>(key: string, defaultValue: T, schema?: z.ZodType<T>): T {
   if (typeof window === 'undefined') return defaultValue;
   try {
     const raw = window.localStorage.getItem(key);
     if (!raw) return defaultValue;
-    return JSON.parse(raw) as T;
+    const parsed = JSON.parse(raw);
+
+    if (schema) {
+      const validated = schema.safeParse(parsed);
+      if (!validated.success) {
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn(
+            `[GrantlyStorage] Invalid data schema for key "${key}". Falling back to default values.`,
+            validated.error.issues
+          );
+        }
+        return defaultValue;
+      }
+      return validated.data;
+    }
+
+    return parsed as T;
   } catch (err) {
     console.warn(`[GrantlyStorage] Error parsing key ${key}:`, err);
     return defaultValue;
   }
 }
 
-function safeSet<T>(key: string, value: T): void {
+export function safeSet<T>(key: string, value: T): void {
   if (typeof window === 'undefined') return;
   try {
     window.localStorage.setItem(key, JSON.stringify(value));
@@ -50,7 +74,11 @@ function safeSet<T>(key: string, value: T): void {
 export const GrantlyStorage = {
   // Scholarships
   getScholarships(): Scholarship[] {
-    const stored = safeGet<Scholarship[]>(STORAGE_KEYS.SCHOLARSHIPS, []);
+    const stored = safeGet<Scholarship[]>(
+      STORAGE_KEYS.SCHOLARSHIPS,
+      [],
+      z.array(ScholarshipSchema)
+    );
     if (!stored || stored.length === 0) {
       safeSet(STORAGE_KEYS.SCHOLARSHIPS, DEMO_SCHOLARSHIPS);
       return DEMO_SCHOLARSHIPS;
@@ -65,7 +93,11 @@ export const GrantlyStorage = {
 
   // Student Profile
   getProfile(): StudentProfile {
-    return safeGet<StudentProfile>(STORAGE_KEYS.PROFILE, INITIAL_STUDENT_PROFILE);
+    return safeGet<StudentProfile>(
+      STORAGE_KEYS.PROFILE,
+      INITIAL_STUDENT_PROFILE,
+      StudentProfileSchema
+    );
   },
 
   updateProfile(profile: Partial<StudentProfile>): StudentProfile {
@@ -77,7 +109,7 @@ export const GrantlyStorage = {
 
   // Saved / Bookmarked Scholarships
   getSavedIds(): string[] {
-    return safeGet<string[]>(STORAGE_KEYS.SAVED, INITIAL_SAVED_SCHOLARSHIPS);
+    return safeGet<string[]>(STORAGE_KEYS.SAVED, INITIAL_SAVED_SCHOLARSHIPS, SavedIdsSchema);
   },
 
   isSaved(id: string): boolean {
@@ -102,7 +134,11 @@ export const GrantlyStorage = {
 
   // Applications
   getApplications(): ApplicationRecord[] {
-    return safeGet<ApplicationRecord[]>(STORAGE_KEYS.APPLICATIONS, INITIAL_APPLICATIONS);
+    return safeGet<ApplicationRecord[]>(
+      STORAGE_KEYS.APPLICATIONS,
+      INITIAL_APPLICATIONS,
+      z.array(ApplicationRecordSchema)
+    );
   },
 
   getApplicationByScholarshipId(scholarshipId: string): ApplicationRecord | undefined {
@@ -163,7 +199,11 @@ export const GrantlyStorage = {
 
   // Documents Checklist
   getDocuments(): DocumentItem[] {
-    return safeGet<DocumentItem[]>(STORAGE_KEYS.DOCUMENTS, INITIAL_DOCUMENTS);
+    return safeGet<DocumentItem[]>(
+      STORAGE_KEYS.DOCUMENTS,
+      INITIAL_DOCUMENTS,
+      z.array(DocumentItemSchema)
+    );
   },
 
   toggleDocumentStatus(id: string): DocumentItem[] {

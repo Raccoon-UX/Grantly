@@ -286,8 +286,8 @@ export default function SmartMatchPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                   {/* Matched */}
                   <div className="space-y-2">
-                    <p className="font-bold text-[#16A779] uppercase tracking-wider text-[11px] flex items-center gap-1">
-                      <CheckCircle2 className="w-3.5 h-3.5" />
+                    <p className="font-bold text-emerald-800 uppercase tracking-wider text-[11px] flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
                       <span>Satisfied Requirements ({result.matchedCriteria.length})</span>
                     </p>
                     <div className="space-y-1.5">
@@ -297,7 +297,7 @@ export default function SmartMatchPage() {
                           className="p-2.5 rounded-xl bg-emerald-50/50 border border-emerald-100 flex items-center justify-between"
                         >
                           <span className="font-semibold text-[#17213A]">{c.label}</span>
-                          <span className="text-[11px] text-[#16A779] font-medium">{c.studentValue}</span>
+                          <span className="text-[11px] text-emerald-800 font-semibold">{c.studentValue}</span>
                         </div>
                       ))}
                     </div>
@@ -305,8 +305,8 @@ export default function SmartMatchPage() {
 
                   {/* Unmatched / Gaps */}
                   <div className="space-y-2">
-                    <p className="font-bold text-[#DC5260] uppercase tracking-wider text-[11px] flex items-center gap-1">
-                      <XCircle className="w-3.5 h-3.5" />
+                    <p className="font-bold text-red-700 uppercase tracking-wider text-[11px] flex items-center gap-1">
+                      <XCircle className="w-3.5 h-3.5 text-red-600" />
                       <span>Unmatched Constraints ({result.unmatchedCriteria.length})</span>
                     </p>
                     {result.unmatchedCriteria.length === 0 ? (
@@ -321,7 +321,7 @@ export default function SmartMatchPage() {
                             className="p-2.5 rounded-xl bg-red-50/50 border border-red-100 flex flex-col justify-between"
                           >
                             <span className="font-semibold text-[#17213A]">{c.label}</span>
-                            <span className="text-[10px] text-[#DC5260] mt-0.5">
+                            <span className="text-[10px] text-red-700 font-medium mt-0.5">
                               Provider requires: {c.requiredValue} (You: {c.studentValue})
                             </span>
                           </div>
