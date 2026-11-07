@@ -85,7 +85,7 @@ export default function SettingsPage() {
           </div>
 
           <div className="space-y-4 text-xs sm:text-sm">
-            <label className="flex items-start justify-between gap-4 cursor-pointer">
+            <label htmlFor="deadline-reminders-checkbox" className="flex items-start justify-between gap-4 cursor-pointer">
               <div>
                 <p className="font-bold text-[#17213A]">Deadline Radar Alerts</p>
                 <p className="text-xs text-[#667085]">
@@ -93,6 +93,7 @@ export default function SettingsPage() {
                 </p>
               </div>
               <input
+                id="deadline-reminders-checkbox"
                 type="checkbox"
                 checked={deadlineReminders}
                 onChange={(e) => setDeadlineReminders(e.target.checked)}
@@ -100,7 +101,7 @@ export default function SettingsPage() {
               />
             </label>
 
-            <label className="flex items-start justify-between gap-4 cursor-pointer">
+            <label htmlFor="smart-match-alerts-checkbox" className="flex items-start justify-between gap-4 cursor-pointer">
               <div>
                 <p className="font-bold text-[#17213A]">Smart Match Discovery Notifications</p>
                 <p className="text-xs text-[#667085]">
@@ -108,6 +109,7 @@ export default function SettingsPage() {
                 </p>
               </div>
               <input
+                id="smart-match-alerts-checkbox"
                 type="checkbox"
                 checked={smartMatchAlerts}
                 onChange={(e) => setSmartMatchAlerts(e.target.checked)}
@@ -115,7 +117,7 @@ export default function SettingsPage() {
               />
             </label>
 
-            <label className="flex items-start justify-between gap-4 cursor-pointer">
+            <label htmlFor="email-alerts-checkbox" className="flex items-start justify-between gap-4 cursor-pointer">
               <div>
                 <p className="font-bold text-[#17213A]">Institutional Summary Digests</p>
                 <p className="text-xs text-[#667085]">
@@ -123,6 +125,7 @@ export default function SettingsPage() {
                 </p>
               </div>
               <input
+                id="email-alerts-checkbox"
                 type="checkbox"
                 checked={emailAlerts}
                 onChange={(e) => setEmailAlerts(e.target.checked)}
@@ -172,7 +175,7 @@ export default function SettingsPage() {
             </div>
             <button
               onClick={() => setShowResetConfirm(true)}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-red-50 hover:bg-red-100 text-[#DC5260] border border-red-200 font-bold transition-colors flex-shrink-0"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 font-bold transition-colors flex-shrink-0"
             >
               <RotateCcw className="w-4 h-4" />
               <span>Reset to Defaults</span>

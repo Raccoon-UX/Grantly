@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { AppShell } from '@/components/layout/AppShell';
 import { useGrantly } from '@/context/GrantlyContext';
@@ -29,13 +29,31 @@ export default function DocumentsPage() {
 
   const categories = ['Identity', 'Academic', 'Financial', 'Institutional'];
 
-  const filteredDocs = documents.filter((doc) => {
-    if (filterCategory !== 'all' && doc.category !== filterCategory) return false;
-    if (searchDoc.trim() && !doc.title.toLowerCase().includes(searchDoc.toLowerCase())) {
-      return false;
-    }
-    return true;
-  });
+  const filteredDocs = useMemo(() => {
+    return documents.filter((doc) => {
+      if (filterCategory !== 'all' && doc.category !== filterCategory) return false;
+      if (searchDoc.trim() && !doc.title.toLowerCase().includes(searchDoc.toLowerCase())) {
+        return false;
+      }
+      return true;
+    });
+  }, [documents, filterCategory, searchDoc]);
+
+  // Pre-index document-to-scholarships mapping
+  const docScholarshipMap = useMemo(() => {
+    const map = new Map<string, typeof scholarships>();
+    documents.forEach((doc) => {
+      const matching = scholarships.filter((s) =>
+        s.requiredDocuments.some((reqDoc) => {
+          const rLower = reqDoc.toLowerCase();
+          const dLower = doc.title.toLowerCase();
+          return rLower.includes(dLower) || dLower.includes(rLower);
+        })
+      );
+      map.set(doc.id, matching);
+    });
+    return map;
+  }, [documents, scholarships]);
 
   const readinessPercent = Math.round((stats.documentsReadyCount / stats.documentsTotalCount) * 100);
 
@@ -88,7 +106,7 @@ export default function DocumentsPage() {
           <ShieldCheck className="w-5 h-5 text-[#5145CD] flex-shrink-0 mt-0.5" />
           <div className="space-y-0.5">
             <p className="font-bold">Privacy & Simulation Notice</p>
-            <p className="text-[#667085] leading-relaxed">
+            <p className="text-[#374151] leading-relaxed">
               GRANTLY does not transmit or store actual government documents or confidential biometric PII. This checklist tracks document readiness status and file names locally on your device.
             </p>
           </div>
@@ -144,14 +162,8 @@ export default function DocumentsPage() {
             const isReady = doc.status === 'ready';
             const isExpanded = expandedDocId === doc.id;
 
-            // Match actual scholarships requiring this document
-            const matchingScholarships = scholarships.filter((s) =>
-              s.requiredDocuments.some((reqDoc) => {
-                const rLower = reqDoc.toLowerCase();
-                const dLower = doc.title.toLowerCase();
-                return rLower.includes(dLower) || dLower.includes(rLower);
-              })
-            );
+            // Match actual scholarships requiring this document from pre-indexed map
+            const matchingScholarships = docScholarshipMap.get(doc.id) || [];
 
             return (
               <div
@@ -168,23 +180,23 @@ export default function DocumentsPage() {
                       onClick={() => toggleDocumentReady(doc.id)}
                       className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full border transition-all ${
                         isReady
-                          ? 'bg-emerald-50 text-[#16A779] border-emerald-200'
+                          ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
                           : 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100/60'
                       }`}
-                      aria-label={`Toggle readiness status for ${doc.title}`}
+                      aria-label={`${isReady ? 'Ready' : 'Pending'}: Toggle status for ${doc.title}`}
                     >
                       {isReady ? <Check className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
                       <span>{isReady ? 'Ready' : 'Pending'}</span>
                     </button>
                   </div>
 
-                  <h3 className="text-sm font-bold text-[#17213A]">{doc.title}</h3>
+                  <h2 className="text-sm font-bold text-[#17213A]">{doc.title}</h2>
 
                   {isReady && doc.fileName ? (
                     <p className="text-xs text-[#667085] flex items-center gap-1.5 bg-[#F7F8FC] p-2 rounded-lg border border-[#E7E9F0]">
                       <FileText className="w-3.5 h-3.5 text-[#5145CD]" />
                       <span className="truncate font-mono text-[11px]">{doc.fileName}</span>
-                      <span className="text-[10px] text-gray-400">({doc.fileSize})</span>
+                      <span className="text-[10px] text-gray-600 font-semibold">({doc.fileSize})</span>
                     </p>
                   ) : (
                     <p className="text-xs text-amber-800 bg-amber-50/60 p-2 rounded-lg border border-amber-100 flex items-center gap-1.5">

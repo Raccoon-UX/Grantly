@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useGrantly } from '@/context/GrantlyContext';
+import { useFocusTrap } from '@/lib/hooks/useFocusTrap';
 import {
   Menu,
   Search,
@@ -23,6 +24,11 @@ export function Header({ onToggleMobileMenu }: HeaderProps) {
   const { stats, profile } = useGrantly();
   const [quickSearch, setQuickSearch] = useState('');
   const [isNotifOpen, setIsNotifOpen] = useState(false);
+
+  const notifRef = useFocusTrap<HTMLDivElement>({
+    isOpen: isNotifOpen,
+    onClose: () => setIsNotifOpen(false),
+  });
 
   // Close notifications on Escape key
   React.useEffect(() => {
@@ -86,6 +92,8 @@ export function Header({ onToggleMobileMenu }: HeaderProps) {
         <div className="relative">
           <button
             onClick={() => setIsNotifOpen(!isNotifOpen)}
+            aria-expanded={isNotifOpen}
+            aria-haspopup="dialog"
             className="relative p-2 rounded-xl text-[#667085] hover:text-[#17213A] hover:bg-[#F7F8FC] border border-[#E7E9F0] transition-colors"
             aria-label="View upcoming deadlines and reminders"
           >
@@ -97,10 +105,12 @@ export function Header({ onToggleMobileMenu }: HeaderProps) {
 
           {isNotifOpen && (
             <div
+              ref={notifRef}
               role="dialog"
               aria-modal="true"
               aria-label="Deadline notifications"
-              className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-elevated border border-[#E7E9F0] p-4 z-50 animate-in fade-in-50 zoom-in-95 duration-150"
+              tabIndex={-1}
+              className="outline-none absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-elevated border border-[#E7E9F0] p-4 z-50 animate-in fade-in-50 zoom-in-95 duration-150"
             >
               <div className="flex items-center justify-between pb-3 border-b border-[#E7E9F0]">
                 <div className="flex items-center gap-2">

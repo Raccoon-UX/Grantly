@@ -11,6 +11,13 @@ import {
 } from '@/types';
 import { GrantlyStorage } from '@/lib/storage';
 import { calculateSmartMatch } from '@/lib/matching';
+import { DEMO_SCHOLARSHIPS } from '@/data/scholarships';
+import {
+  INITIAL_STUDENT_PROFILE,
+  INITIAL_DOCUMENTS,
+  INITIAL_APPLICATIONS,
+  INITIAL_SAVED_SCHOLARSHIPS,
+} from '@/data/demo-profile';
 
 export interface ToastMessage {
   id: string;
@@ -55,11 +62,12 @@ interface GrantlyContextType {
 const GrantlyContext = createContext<GrantlyContextType | null>(null);
 
 export function GrantlyProvider({ children }: { children: React.ReactNode }) {
-  const [scholarships, setScholarships] = useState<Scholarship[]>([]);
-  const [profile, setProfile] = useState<StudentProfile>(GrantlyStorage.getProfile());
-  const [savedIds, setSavedIds] = useState<string[]>([]);
-  const [applications, setApplications] = useState<ApplicationRecord[]>([]);
-  const [documents, setDocuments] = useState<DocumentItem[]>([]);
+  // Initialize with canonical seed data to guarantee zero layout shift (CLS) between SSR and hydration
+  const [scholarships, setScholarships] = useState<Scholarship[]>(DEMO_SCHOLARSHIPS);
+  const [profile, setProfile] = useState<StudentProfile>(INITIAL_STUDENT_PROFILE);
+  const [savedIds, setSavedIds] = useState<string[]>(INITIAL_SAVED_SCHOLARSHIPS);
+  const [applications, setApplications] = useState<ApplicationRecord[]>(INITIAL_APPLICATIONS);
+  const [documents, setDocuments] = useState<DocumentItem[]>(INITIAL_DOCUMENTS);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
 
@@ -228,27 +236,48 @@ export function GrantlyProvider({ children }: { children: React.ReactNode }) {
     };
   }, [scholarships, profile, savedIds, applications, documents]);
 
+  // Memoize context value to eliminate cascading consumer re-renders
+  const contextValue = useMemo(
+    () => ({
+      scholarships,
+      profile,
+      savedIds,
+      applications,
+      documents,
+      toasts,
+      isLoaded,
+      toggleSaveScholarship,
+      updateApplicationStatus,
+      updateProfile,
+      toggleDocumentReady,
+      resetDemoData,
+      showToast,
+      removeToast,
+      getMatchResult,
+      stats,
+    }),
+    [
+      scholarships,
+      profile,
+      savedIds,
+      applications,
+      documents,
+      toasts,
+      isLoaded,
+      toggleSaveScholarship,
+      updateApplicationStatus,
+      updateProfile,
+      toggleDocumentReady,
+      resetDemoData,
+      showToast,
+      removeToast,
+      getMatchResult,
+      stats,
+    ]
+  );
+
   return (
-    <GrantlyContext.Provider
-      value={{
-        scholarships,
-        profile,
-        savedIds,
-        applications,
-        documents,
-        toasts,
-        isLoaded,
-        toggleSaveScholarship,
-        updateApplicationStatus,
-        updateProfile,
-        toggleDocumentReady,
-        resetDemoData,
-        showToast,
-        removeToast,
-        getMatchResult,
-        stats,
-      }}
-    >
+    <GrantlyContext.Provider value={contextValue}>
       {children}
     </GrantlyContext.Provider>
   );

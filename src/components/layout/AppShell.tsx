@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
 import { ToastContainer } from '@/components/shared/ToastContainer';
+import { useFocusTrap } from '@/lib/hooks/useFocusTrap';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LayoutDashboard, Compass, Sparkles, ClipboardList, User } from 'lucide-react';
@@ -15,6 +16,11 @@ interface AppShellProps {
 export function AppShell({ children }: AppShellProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+
+  const mobileDrawerRef = useFocusTrap<HTMLDivElement>({
+    isOpen: mobileMenuOpen,
+    onClose: () => setMobileMenuOpen(false),
+  });
 
   // Close mobile drawer on Escape key
   React.useEffect(() => {
@@ -60,9 +66,14 @@ export function AppShell({ children }: AppShellProps) {
         />
       )}
 
-      {/* Mobile Drawer */}
+      {/* Mobile Drawer with Focus Trap */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 w-72 bg-white transform transition-transform duration-300 ease-in-out lg:hidden shadow-2xl ${
+        ref={mobileMenuOpen ? mobileDrawerRef : undefined}
+        role={mobileMenuOpen ? 'dialog' : undefined}
+        aria-modal={mobileMenuOpen ? 'true' : undefined}
+        aria-label="Navigation drawer"
+        tabIndex={mobileMenuOpen ? -1 : undefined}
+        className={`fixed inset-y-0 left-0 z-50 w-72 bg-white transform transition-transform duration-300 ease-in-out lg:hidden shadow-2xl outline-none ${
           mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >

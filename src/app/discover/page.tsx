@@ -111,6 +111,15 @@ function DiscoverContent() {
     deadlineFilter !== 'all' ||
     sortBy !== 'relevance';
 
+  // Pre-index match scores map to avoid recomputing match algorithm O(N log N) times during sorting
+  const matchScoresMap = useMemo(() => {
+    const map = new Map<string, number>();
+    scholarships.forEach((s) => {
+      map.set(s.id, getMatchResult(s).matchScore);
+    });
+    return map;
+  }, [scholarships, getMatchResult]);
+
   // Filtered & Sorted Scholarships
   const filteredScholarships = useMemo(() => {
     return scholarships
@@ -175,14 +184,16 @@ function DiscoverContent() {
           return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
         }
         if (sortBy === 'match-score') {
-          const matchA = getMatchResult(a).matchScore;
-          const matchB = getMatchResult(b).matchScore;
-          return matchB - matchA;
+          const scoreA = matchScoresMap.get(a.id) ?? 0;
+          const scoreB = matchScoresMap.get(b.id) ?? 0;
+          return scoreB - scoreA;
         }
         // Default: relevance (featured first, then match score)
         if (a.featured && !b.featured) return -1;
         if (!a.featured && b.featured) return 1;
-        return getMatchResult(b).matchScore - getMatchResult(a).matchScore;
+        const relScoreA = matchScoresMap.get(a.id) ?? 0;
+        const relScoreB = matchScoresMap.get(b.id) ?? 0;
+        return relScoreB - relScoreA;
       });
   }, [
     scholarships,
@@ -195,7 +206,7 @@ function DiscoverContent() {
     maxIncomeFilter,
     deadlineFilter,
     sortBy,
-    getMatchResult,
+    matchScoresMap,
   ]);
 
   return (
@@ -443,11 +454,11 @@ function DiscoverContent() {
               </div>
 
               {/* Deadline Range */}
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-[#17213A] uppercase tracking-wider flex items-center gap-1.5">
+              <fieldset className="space-y-2 border-0 p-0 m-0">
+                <legend className="text-xs font-bold text-[#17213A] uppercase tracking-wider flex items-center gap-1.5 mb-1">
                   <Calendar className="w-3.5 h-3.5 text-[#5145CD]" />
                   <span>Deadline Window</span>
-                </label>
+                </legend>
                 <div className="space-y-1 text-xs">
                   {[
                     { label: 'Any Deadline', value: 'all' },
@@ -468,7 +479,7 @@ function DiscoverContent() {
                     </label>
                   ))}
                 </div>
-              </div>
+              </fieldset>
 
               {/* Min Award Slider */}
               <div className="space-y-2">

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AppShell } from '@/components/layout/AppShell';
@@ -39,15 +39,19 @@ export default function DashboardPage() {
   };
 
   // Top recommended scholarships sorted by smart match score
-  const recommendedScholarships = [...scholarships]
-    .map((s) => ({ scholarship: s, match: getMatchResult(s) }))
-    .sort((a, b) => b.match.matchScore - a.match.matchScore)
-    .slice(0, 3);
+  const recommendedScholarships = useMemo(() => {
+    return [...scholarships]
+      .map((s) => ({ scholarship: s, match: getMatchResult(s) }))
+      .sort((a, b) => b.match.matchScore - a.match.matchScore)
+      .slice(0, 3);
+  }, [scholarships, getMatchResult]);
 
   // Applications in progress
-  const activeApplications = applications.filter(
-    (a) => a.status !== 'Approved' && a.status !== 'Rejected'
-  );
+  const activeApplications = useMemo(() => {
+    return applications.filter(
+      (a) => a.status !== 'Approved' && a.status !== 'Rejected'
+    );
+  }, [applications]);
 
   return (
     <AppShell>

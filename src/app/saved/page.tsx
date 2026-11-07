@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import Link from 'next/link';
 import { AppShell } from '@/components/layout/AppShell';
 import { useGrantly } from '@/context/GrantlyContext';
@@ -10,7 +10,9 @@ import { Bookmark, Compass, ArrowRight } from 'lucide-react';
 export default function SavedScholarshipsPage() {
   const { scholarships, savedIds } = useGrantly();
 
-  const savedScholarships = scholarships.filter((s) => savedIds.includes(s.id));
+  const savedScholarships = useMemo(() => {
+    return scholarships.filter((s) => savedIds.includes(s.id));
+  }, [scholarships, savedIds]);
 
   return (
     <AppShell>

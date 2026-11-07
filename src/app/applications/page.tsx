@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { AppShell } from '@/components/layout/AppShell';
 import { useGrantly } from '@/context/GrantlyContext';
@@ -42,16 +42,16 @@ export default function ApplicationsPage() {
   const getStatusColor = (status: ApplicationStatus) => {
     switch (status) {
       case 'Approved':
-        return 'bg-emerald-50 text-[#16A779] border-emerald-200';
+        return 'bg-emerald-50 text-emerald-800 border-emerald-200';
       case 'Under Review':
       case 'Applied':
-        return 'bg-blue-50 text-[#3486D9] border-blue-200';
+        return 'bg-blue-50 text-blue-800 border-blue-200';
       case 'Ready to Apply':
         return 'bg-[#EDEBFF] text-[#5145CD] border-[#7868F6]/30';
       case 'Preparing':
-        return 'bg-amber-50 text-[#E5A32A] border-amber-200';
+        return 'bg-amber-50 text-amber-800 border-amber-200';
       case 'Rejected':
-        return 'bg-red-50 text-[#DC5260] border-red-200';
+        return 'bg-red-50 text-red-700 border-red-200';
       default:
         return 'bg-gray-50 text-gray-600 border-gray-200';
     }

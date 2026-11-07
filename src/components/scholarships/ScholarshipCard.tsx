@@ -21,7 +21,7 @@ interface ScholarshipCardProps {
   viewMode?: 'grid' | 'list';
 }
 
-export function ScholarshipCard({
+function ScholarshipCardComponent({
   scholarship,
   viewMode = 'grid',
 }: ScholarshipCardProps) {
@@ -234,3 +234,5 @@ export function ScholarshipCard({
     </div>
   );
 }
+
+export const ScholarshipCard = React.memo(ScholarshipCardComponent);

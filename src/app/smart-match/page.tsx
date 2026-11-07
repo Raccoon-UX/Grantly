@@ -1,16 +1,15 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { AppShell } from '@/components/layout/AppShell';
 import { useGrantly } from '@/context/GrantlyContext';
-import { formatCurrencyINR, formatDate } from '@/lib/utils';
+import { formatCurrencyINR } from '@/lib/utils';
+import { calculateSmartMatch } from '@/lib/matching';
 import {
   Sparkles,
   CheckCircle2,
   XCircle,
-  AlertCircle,
-  HelpCircle,
   ArrowRight,
   UserCheck,
   ShieldCheck,
@@ -18,10 +17,11 @@ import {
   Bookmark,
   Building2,
   Info,
+  RotateCcw,
 } from 'lucide-react';
 
 export default function SmartMatchPage() {
-  const { scholarships, profile, getMatchResult, savedIds, toggleSaveScholarship, updateProfile } =
+  const { scholarships, profile, savedIds, toggleSaveScholarship, updateProfile } =
     useGrantly();
 
   const [activeTab, setActiveTab] = useState<'all' | 'high' | 'moderate' | 'unmatched'>('all');
@@ -31,36 +31,55 @@ export default function SmartMatchPage() {
   const [simScore, setSimScore] = useState(profile.academicScore);
   const [simIncome, setSimIncome] = useState(profile.familyIncome);
 
-  // Match all scholarships
-  const analyzedScholarships = scholarships.map((s) => {
-    // If simulator values differ from profile, we can calculate simulated match
-    const testProfile = {
+  const isSimulating =
+    showSimulator &&
+    (simScore !== profile.academicScore || simIncome !== profile.familyIncome);
+
+  // Active evaluation profile (simulated or live profile)
+  const activeEvalProfile = useMemo(() => {
+    if (!showSimulator) return profile;
+    return {
       ...profile,
       academicScore: simScore,
       familyIncome: simIncome,
     };
-    const result = getMatchResult(s);
-    return {
-      scholarship: s,
-      result,
-    };
-  });
+  }, [showSimulator, profile, simScore, simIncome]);
 
-  // Sort by match score descending
-  analyzedScholarships.sort((a, b) => b.result.matchScore - a.result.matchScore);
+  // Match all scholarships with the active evaluation profile
+  const analyzedScholarships = useMemo(() => {
+    const list = scholarships.map((s) => {
+      const result = calculateSmartMatch(s, activeEvalProfile);
+      return {
+        scholarship: s,
+        result,
+      };
+    });
+    return list.sort((a, b) => b.result.matchScore - a.result.matchScore);
+  }, [scholarships, activeEvalProfile]);
 
   // Filter by tab
-  const filteredMatches = analyzedScholarships.filter(({ result }) => {
-    if (activeTab === 'high') return result.matchScore >= 80;
-    if (activeTab === 'moderate') return result.matchScore >= 50 && result.matchScore < 80;
-    if (activeTab === 'unmatched') return result.matchScore < 50;
-    return true;
-  });
+  const filteredMatches = useMemo(() => {
+    return analyzedScholarships.filter(({ result }) => {
+      if (activeTab === 'high') return result.matchScore >= 80;
+      if (activeTab === 'moderate') return result.matchScore >= 50 && result.matchScore < 80;
+      if (activeTab === 'unmatched') return result.matchScore < 50;
+      return true;
+    });
+  }, [analyzedScholarships, activeTab]);
 
-  const highMatchCount = analyzedScholarships.filter((m) => m.result.matchScore >= 80).length;
-  const modMatchCount = analyzedScholarships.filter(
-    (m) => m.result.matchScore >= 50 && m.result.matchScore < 80
-  ).length;
+  const highMatchCount = useMemo(
+    () => analyzedScholarships.filter((m) => m.result.matchScore >= 80).length,
+    [analyzedScholarships]
+  );
+  const modMatchCount = useMemo(
+    () => analyzedScholarships.filter((m) => m.result.matchScore >= 50 && m.result.matchScore < 80).length,
+    [analyzedScholarships]
+  );
+
+  const resetSimulation = () => {
+    setSimScore(profile.academicScore);
+    setSimIncome(profile.familyIncome);
+  };
 
   return (
     <AppShell>
@@ -84,6 +103,7 @@ export default function SmartMatchPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowSimulator(!showSimulator)}
+              aria-expanded={showSimulator}
               className="px-3.5 py-2 rounded-xl bg-white border border-[#E7E9F0] text-xs font-semibold text-[#17213A] hover:border-[#5145CD] transition-all flex items-center gap-1.5"
             >
               <Sliders className="w-4 h-4 text-[#5145CD]" />
@@ -121,17 +141,36 @@ export default function SmartMatchPage() {
                 </h3>
               </div>
               <span className="text-[11px] font-semibold text-[#667085]">
-                Temporarily adjust parameters to preview eligibility shifts
+                Temporarily adjust parameters to preview instant eligibility shifts
               </span>
             </div>
+
+            {isSimulating && (
+              <div className="flex items-center justify-between bg-amber-50 border border-amber-200 rounded-xl p-2.5 text-xs text-amber-800">
+                <span className="font-semibold">
+                  ⚡ Simulating What-If: Marks {simScore}% | Income ₹{simIncome.toLocaleString('en-IN')}/yr
+                </span>
+                <button
+                  onClick={resetSimulation}
+                  className="font-bold underline hover:text-amber-900 flex items-center gap-1 text-[11px]"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  <span>Reset to Live Profile</span>
+                </button>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs font-bold text-[#17213A]">
-                  <span>Simulated Academic Score</span>
+                  <label htmlFor="sim-score-input" className="cursor-pointer">
+                    Simulated Academic Score
+                  </label>
                   <span className="text-[#5145CD]">{simScore}%</span>
                 </div>
                 <input
+                  id="sim-score-input"
+                  aria-label="Simulated Academic Score Percentage"
                   type="range"
                   min="50"
                   max="100"
@@ -144,10 +183,14 @@ export default function SmartMatchPage() {
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs font-bold text-[#17213A]">
-                  <span>Simulated Annual Family Income</span>
+                  <label htmlFor="sim-income-input" className="cursor-pointer">
+                    Simulated Annual Family Income
+                  </label>
                   <span className="text-[#5145CD]">₹{simIncome.toLocaleString('en-IN')}/yr</span>
                 </div>
                 <input
+                  id="sim-income-input"
+                  aria-label="Simulated Annual Family Income in Rupees"
                   type="range"
                   min="100000"
                   max="1500000"
@@ -159,12 +202,20 @@ export default function SmartMatchPage() {
               </div>
             </div>
 
-            <div className="flex justify-end pt-2">
+            <div className="flex items-center justify-between pt-2">
+              <button
+                onClick={resetSimulation}
+                className="px-3.5 py-1.5 rounded-xl border border-[#E7E9F0] text-xs font-semibold text-[#667085] hover:text-[#17213A] transition-colors flex items-center gap-1"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Revert to Live Profile</span>
+              </button>
+
               <button
                 onClick={() => {
                   updateProfile({ academicScore: simScore, familyIncome: simIncome });
                 }}
-                className="px-4 py-1.5 rounded-xl bg-[#5145CD] text-white text-xs font-semibold"
+                className="px-4 py-1.5 rounded-xl bg-[#5145CD] text-white text-xs font-semibold hover:bg-[#4338B8] transition-colors"
               >
                 Save These Values to Live Profile
               </button>
@@ -172,8 +223,12 @@ export default function SmartMatchPage() {
           </div>
         )}
 
-        {/* Filter Tabs */}
-        <div className="flex items-center gap-2 border-b border-[#E7E9F0] pb-2 overflow-x-auto">
+        {/* Filter Tabs with Accessible ARIA Tablist */}
+        <div
+          role="tablist"
+          aria-label="Match probability categories"
+          className="flex items-center gap-2 border-b border-[#E7E9F0] pb-2 overflow-x-auto"
+        >
           {[
             { id: 'all', label: 'All Opportunities', count: analyzedScholarships.length },
             { id: 'high', label: 'High Match (80%+)', count: highMatchCount },
@@ -182,6 +237,8 @@ export default function SmartMatchPage() {
           ].map((tab) => (
             <button
               key={tab.id}
+              role="tab"
+              aria-selected={activeTab === tab.id}
               onClick={() => setActiveTab(tab.id as 'all' | 'high' | 'moderate' | 'unmatched')}
               className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-2 whitespace-nowrap ${
                 activeTab === tab.id

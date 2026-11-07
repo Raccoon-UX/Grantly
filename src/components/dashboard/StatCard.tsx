@@ -10,7 +10,7 @@ interface StatCardProps {
   colorScheme?: 'indigo' | 'emerald' | 'amber' | 'blue';
 }
 
-export function StatCard({
+function StatCardComponent({
   title,
   value,
   subtitle,
@@ -72,3 +72,5 @@ export function StatCard({
     </div>
   );
 }
+
+export const StatCard = React.memo(StatCardComponent);
