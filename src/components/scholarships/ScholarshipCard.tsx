@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Scholarship } from '@/types';
+import { Scholarship, SmartMatchResult, ApplicationRecord } from '@/types';
 import { useGrantly } from '@/context/GrantlyContext';
 import { formatCurrencyINR, formatDate, getDaysRemaining } from '@/lib/utils';
 import {
@@ -19,18 +19,24 @@ import {
 interface ScholarshipCardProps {
   scholarship: Scholarship;
   viewMode?: 'grid' | 'list';
+  matchResult?: SmartMatchResult;
+  isSaved?: boolean;
+  existingApp?: ApplicationRecord;
 }
 
 function ScholarshipCardComponent({
   scholarship,
   viewMode = 'grid',
+  matchResult: matchResultProp,
+  isSaved: isSavedProp,
+  existingApp: existingAppProp,
 }: ScholarshipCardProps) {
   const { savedIds, toggleSaveScholarship, getMatchResult, applications } = useGrantly();
 
-  const isSaved = savedIds.includes(scholarship.id);
-  const matchResult = getMatchResult(scholarship);
+  const isSaved = isSavedProp !== undefined ? isSavedProp : savedIds.includes(scholarship.id);
+  const matchResult = matchResultProp !== undefined ? matchResultProp : getMatchResult(scholarship);
   const daysLeft = getDaysRemaining(scholarship.deadline);
-  const existingApp = applications.find((a) => a.scholarshipId === scholarship.id);
+  const existingApp = existingAppProp !== undefined ? existingAppProp : applications.find((a) => a.scholarshipId === scholarship.id);
 
   const getMatchBadgeStyle = (score: number) => {
     if (score >= 80) return 'bg-emerald-50 text-emerald-800 border-emerald-200';

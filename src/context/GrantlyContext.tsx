@@ -171,25 +171,36 @@ export function GrantlyProvider({ children }: { children: React.ReactNode }) {
     });
   }, [syncFromStorage, showToast]);
 
+  // Memoized mapping of scholarship ID -> SmartMatchResult to eliminate duplicate calculations
+  const matchResultsMap = useMemo(() => {
+    const map = new Map<string, SmartMatchResult>();
+    for (const s of scholarships) {
+      map.set(s.id, calculateSmartMatch(s, profile));
+    }
+    return map;
+  }, [scholarships, profile]);
+
   const getMatchResult = useCallback(
     (scholarship: Scholarship): SmartMatchResult => {
+      const cached = matchResultsMap.get(scholarship.id);
+      if (cached) return cached;
       return calculateSmartMatch(scholarship, profile);
     },
-    [profile]
+    [matchResultsMap, profile]
   );
 
   // Compute stats dynamically
   const stats = useMemo(() => {
     const totalScholarships = scholarships.length;
     let eligibleCount = 0;
-    const now = new Date().getTime();
+    const now = Date.now();
 
-    scholarships.forEach((s) => {
-      const res = calculateSmartMatch(s, profile);
-      if (res.isEligible) {
+    for (const s of scholarships) {
+      const res = matchResultsMap.get(s.id);
+      if (res?.isEligible) {
         eligibleCount++;
       }
-    });
+    }
 
     const approvedCount = applications.filter((a) => a.status === 'Approved').length;
     const docsReady = documents.filter((d) => d.status === 'ready').length;
@@ -234,7 +245,7 @@ export function GrantlyProvider({ children }: { children: React.ReactNode }) {
       profileCompletionPercent,
       upcomingDeadlines,
     };
-  }, [scholarships, profile, savedIds, applications, documents]);
+  }, [scholarships, profile, matchResultsMap, savedIds, applications, documents]);
 
   // Memoize context value to eliminate cascading consumer re-renders
   const contextValue = useMemo(

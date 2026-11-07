@@ -76,11 +76,10 @@ export const GrantlyStorage = {
   getScholarships(): Scholarship[] {
     const stored = safeGet<Scholarship[]>(
       STORAGE_KEYS.SCHOLARSHIPS,
-      [],
+      DEMO_SCHOLARSHIPS,
       z.array(ScholarshipSchema)
     );
     if (!stored || stored.length === 0) {
-      safeSet(STORAGE_KEYS.SCHOLARSHIPS, DEMO_SCHOLARSHIPS);
       return DEMO_SCHOLARSHIPS;
     }
     return stored;

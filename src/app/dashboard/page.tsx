@@ -25,7 +25,7 @@ import {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { scholarships, profile, applications, stats, getMatchResult } = useGrantly();
+  const { scholarships, profile, applications, stats, getMatchResult, savedIds } = useGrantly();
   const [searchTerm, setSearchTerm] = useState('');
 
   // Handle quick search form
@@ -201,8 +201,15 @@ export default function DashboardPage() {
 
             {/* Scholarships List */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-5">
-              {recommendedScholarships.map(({ scholarship }) => (
-                <ScholarshipCard key={scholarship.id} scholarship={scholarship} viewMode="grid" />
+              {recommendedScholarships.map(({ scholarship, match }) => (
+                <ScholarshipCard
+                  key={scholarship.id}
+                  scholarship={scholarship}
+                  viewMode="grid"
+                  matchResult={match}
+                  isSaved={savedIds.includes(scholarship.id)}
+                  existingApp={applications.find((a) => a.scholarshipId === scholarship.id)}
+                />
               ))}
             </div>
 
