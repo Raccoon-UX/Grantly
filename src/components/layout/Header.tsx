@@ -19,7 +19,7 @@ interface HeaderProps {
   onToggleMobileMenu: () => void;
 }
 
-export function Header({ onToggleMobileMenu }: HeaderProps) {
+function HeaderComponent({ onToggleMobileMenu }: HeaderProps) {
   const router = useRouter();
   const { stats, profile } = useGrantly();
   const [quickSearch, setQuickSearch] = useState('');
@@ -190,3 +190,5 @@ export function Header({ onToggleMobileMenu }: HeaderProps) {
     </header>
   );
 }
+
+export const Header = React.memo(HeaderComponent);

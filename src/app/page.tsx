@@ -50,7 +50,7 @@ export default function LandingPage() {
         <section className="relative overflow-hidden py-16 sm:py-24 px-4 sm:px-6 lg:px-8">
           {/* Subtle background glow */}
           <div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-tr from-[#EDEBFF] via-[#7868F6]/10 to-transparent rounded-full blur-3xl pointer-events-none -z-10"
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[radial-gradient(circle_at_center,rgba(237,235,255,0.7)_0%,rgba(120,104,246,0.1)_50%,transparent_70%)] pointer-events-none -z-10"
             aria-hidden="true"
           />
 

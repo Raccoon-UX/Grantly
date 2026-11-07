@@ -6,6 +6,7 @@ import { AppShell } from '@/components/layout/AppShell';
 import { useGrantly } from '@/context/GrantlyContext';
 import { formatCurrencyINR } from '@/lib/utils';
 import { calculateSmartMatch } from '@/lib/matching';
+import { Scholarship, SmartMatchResult } from '@/types';
 import {
   Sparkles,
   CheckCircle2,
@@ -20,8 +21,163 @@ import {
   RotateCcw,
 } from 'lucide-react';
 
+interface MatchCardProps {
+  scholarship: Scholarship;
+  result: SmartMatchResult;
+  isSaved: boolean;
+  onToggleSave: (id: string) => void;
+}
+
+const MatchCard = React.memo(function MatchCard({
+  scholarship,
+  result,
+  isSaved,
+  onToggleSave,
+}: MatchCardProps) {
+  return (
+    <div className="bg-white rounded-3xl border border-[#E7E9F0] hover:border-[#7868F6]/40 p-6 shadow-card hover:shadow-card-hover transition-all duration-200 space-y-5">
+      {/* Header: Name, Provider, Score Pill, Bookmark */}
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+        <div className="space-y-1.5 flex-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-[#EDEBFF] text-[#5145CD]">
+              {scholarship.category}
+            </span>
+            {scholarship.verifiedStatus === 'Verified Official' && (
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
+                <ShieldCheck className="w-3 h-3 text-emerald-700" />
+                Verified
+              </span>
+            )}
+          </div>
+
+          <Link
+            href={`/scholarships/${scholarship.id}`}
+            className="text-lg font-bold text-[#17213A] hover:text-[#5145CD] transition-colors line-clamp-1 block"
+          >
+            {scholarship.name}
+          </Link>
+
+          <p className="text-xs text-[#667085] flex items-center gap-1.5">
+            <Building2 className="w-3.5 h-3.5 text-[#8F9BB3]" />
+            <span>{scholarship.provider}</span>
+          </p>
+        </div>
+
+        {/* Score Pill & Bookmark */}
+        <div className="flex items-center gap-3">
+          <div className="p-3 rounded-2xl bg-[#F7F8FC] border border-[#E7E9F0] text-right min-w-[110px]">
+            <div className="flex items-center justify-end gap-1">
+              <Sparkles className="w-4 h-4 text-[#5145CD]" />
+              <span className="text-xl font-extrabold text-[#17213A] tabular-nums">
+                {result.matchScore}%
+              </span>
+            </div>
+            <span
+              className={`text-[10px] font-bold block ${
+                result.matchScore >= 80
+                  ? 'text-emerald-800'
+                  : result.matchScore >= 50
+                  ? 'text-[#5145CD]'
+                  : 'text-red-700'
+              }`}
+            >
+              {result.confidenceTier} Alignment
+            </span>
+          </div>
+
+          <button
+            onClick={() => onToggleSave(scholarship.id)}
+            className={`p-2.5 rounded-2xl border transition-all ${
+              isSaved
+                ? 'bg-[#5145CD] text-white border-[#5145CD]'
+                : 'bg-white text-[#667085] hover:text-[#5145CD] border-[#E7E9F0]'
+            }`}
+            aria-label={isSaved ? 'Remove from saved' : 'Save opportunity'}
+          >
+            <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
+          </button>
+        </div>
+      </div>
+
+      {/* Explanation text */}
+      <p className="text-xs text-[#17213A] bg-[#F7F8FC] p-3.5 rounded-2xl border border-[#E7E9F0]/80 leading-relaxed">
+        {result.explanation}
+      </p>
+
+      {/* Criteria Checks Breakdown (2 cols) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+        {/* Matched */}
+        <div className="space-y-2">
+          <p className="font-bold text-emerald-800 uppercase tracking-wider text-[11px] flex items-center gap-1">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
+            <span>Satisfied Requirements ({result.matchedCriteria.length})</span>
+          </p>
+          <div className="space-y-1.5">
+            {result.matchedCriteria.map((c) => (
+              <div
+                key={c.label}
+                className="p-2.5 rounded-xl bg-emerald-50/50 border border-emerald-100 flex items-center justify-between"
+              >
+                <span className="font-semibold text-[#17213A]">{c.label}</span>
+                <span className="text-[11px] text-emerald-800 font-semibold">{c.studentValue}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Unmatched / Gaps */}
+        <div className="space-y-2">
+          <p className="font-bold text-red-700 uppercase tracking-wider text-[11px] flex items-center gap-1">
+            <XCircle className="w-3.5 h-3.5 text-red-600" />
+            <span>Unmatched Constraints ({result.unmatchedCriteria.length})</span>
+          </p>
+          {result.unmatchedCriteria.length === 0 ? (
+            <div className="p-3 rounded-xl bg-[#F7F8FC] text-center text-[#667085]">
+              All mandatory requirements satisfied.
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              {result.unmatchedCriteria.map((c) => (
+                <div
+                  key={c.label}
+                  className="p-2.5 rounded-xl bg-red-50/50 border border-red-100 flex flex-col justify-between"
+                >
+                  <span className="font-semibold text-[#17213A]">{c.label}</span>
+                  <span className="text-[10px] text-red-700 font-medium mt-0.5">
+                    Provider requires: {c.requiredValue} (You: {c.studentValue})
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Bottom Bar: Award Amount & Action */}
+      <div className="pt-3 border-t border-[#E7E9F0] flex items-center justify-between">
+        <div className="text-xs">
+          <span className="text-[#667085]">Award: </span>
+          <span className="font-extrabold text-[#17213A]">
+            {formatCurrencyINR(scholarship.awardAmount)}
+          </span>
+          <span className="text-[#667085]"> • {scholarship.awardType}</span>
+        </div>
+
+        <Link
+          href={`/scholarships/${scholarship.id}`}
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#5145CD] hover:bg-[#4338B8] text-white text-xs font-semibold shadow-sm transition-all"
+        >
+          <span>View Scholarship Full Brief</span>
+          <ArrowRight className="w-3.5 h-3.5" />
+        </Link>
+      </div>
+    </div>
+  );
+});
+
 export default function SmartMatchPage() {
-  const { scholarships, profile, savedIds, toggleSaveScholarship, updateProfile } =
+  const { scholarships, profile, savedIds, toggleSaveScholarship, updateProfile, getMatchResult } =
     useGrantly();
 
   const [activeTab, setActiveTab] = useState<'all' | 'high' | 'moderate' | 'unmatched'>('all');
@@ -45,17 +201,19 @@ export default function SmartMatchPage() {
     };
   }, [showSimulator, profile, simScore, simIncome]);
 
-  // Match all scholarships with the active evaluation profile
+  // Match all scholarships with the active evaluation profile (reads pre-calculated matches when not simulating)
   const analyzedScholarships = useMemo(() => {
     const list = scholarships.map((s) => {
-      const result = calculateSmartMatch(s, activeEvalProfile);
+      const result = !showSimulator
+        ? getMatchResult(s)
+        : calculateSmartMatch(s, activeEvalProfile);
       return {
         scholarship: s,
         result,
       };
     });
     return list.sort((a, b) => b.result.matchScore - a.result.matchScore);
-  }, [scholarships, activeEvalProfile]);
+  }, [scholarships, showSimulator, activeEvalProfile, getMatchResult]);
 
   // Filter by tab
   const filteredMatches = useMemo(() => {
@@ -262,153 +420,15 @@ export default function SmartMatchPage() {
 
         {/* Match Cards List */}
         <div className="space-y-5">
-          {filteredMatches.map(({ scholarship, result }) => {
-            const isSaved = savedIds.includes(scholarship.id);
-
-            return (
-              <div
-                key={scholarship.id}
-                className="bg-white rounded-3xl border border-[#E7E9F0] hover:border-[#7868F6]/40 p-6 shadow-card hover:shadow-card-hover transition-all duration-200 space-y-5"
-              >
-                {/* Header: Name, Provider, Score Pill, Bookmark */}
-                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                  <div className="space-y-1.5 flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-[#EDEBFF] text-[#5145CD]">
-                        {scholarship.category}
-                      </span>
-                      {scholarship.verifiedStatus === 'Verified Official' && (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
-                          <ShieldCheck className="w-3 h-3 text-emerald-700" />
-                          Verified
-                        </span>
-                      )}
-                    </div>
-
-                    <Link
-                      href={`/scholarships/${scholarship.id}`}
-                      className="text-lg font-bold text-[#17213A] hover:text-[#5145CD] transition-colors line-clamp-1 block"
-                    >
-                      {scholarship.name}
-                    </Link>
-
-                    <p className="text-xs text-[#667085] flex items-center gap-1.5">
-                      <Building2 className="w-3.5 h-3.5 text-[#8F9BB3]" />
-                      <span>{scholarship.provider}</span>
-                    </p>
-                  </div>
-
-                  {/* Score Pill & Bookmark */}
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 rounded-2xl bg-[#F7F8FC] border border-[#E7E9F0] text-right min-w-[110px]">
-                      <div className="flex items-center justify-end gap-1">
-                        <Sparkles className="w-4 h-4 text-[#5145CD]" />
-                        <span className="text-xl font-extrabold text-[#17213A] tabular-nums">
-                          {result.matchScore}%
-                        </span>
-                      </div>
-                      <span
-                        className={`text-[10px] font-bold block ${
-                          result.matchScore >= 80
-                            ? 'text-emerald-800'
-                            : result.matchScore >= 50
-                            ? 'text-[#5145CD]'
-                            : 'text-red-700'
-                        }`}
-                      >
-                        {result.confidenceTier} Alignment
-                      </span>
-                    </div>
-
-                    <button
-                      onClick={() => toggleSaveScholarship(scholarship.id)}
-                      className={`p-2.5 rounded-2xl border transition-all ${
-                        isSaved
-                          ? 'bg-[#5145CD] text-white border-[#5145CD]'
-                          : 'bg-white text-[#667085] hover:text-[#5145CD] border-[#E7E9F0]'
-                      }`}
-                      aria-label={isSaved ? 'Remove from saved' : 'Save opportunity'}
-                    >
-                      <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Explanation text */}
-                <p className="text-xs text-[#17213A] bg-[#F7F8FC] p-3.5 rounded-2xl border border-[#E7E9F0]/80 leading-relaxed">
-                  {result.explanation}
-                </p>
-
-                {/* Criteria Checks Breakdown (2 cols) */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                  {/* Matched */}
-                  <div className="space-y-2">
-                    <p className="font-bold text-emerald-800 uppercase tracking-wider text-[11px] flex items-center gap-1">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
-                      <span>Satisfied Requirements ({result.matchedCriteria.length})</span>
-                    </p>
-                    <div className="space-y-1.5">
-                      {result.matchedCriteria.map((c) => (
-                        <div
-                          key={c.label}
-                          className="p-2.5 rounded-xl bg-emerald-50/50 border border-emerald-100 flex items-center justify-between"
-                        >
-                          <span className="font-semibold text-[#17213A]">{c.label}</span>
-                          <span className="text-[11px] text-emerald-800 font-semibold">{c.studentValue}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Unmatched / Gaps */}
-                  <div className="space-y-2">
-                    <p className="font-bold text-red-700 uppercase tracking-wider text-[11px] flex items-center gap-1">
-                      <XCircle className="w-3.5 h-3.5 text-red-600" />
-                      <span>Unmatched Constraints ({result.unmatchedCriteria.length})</span>
-                    </p>
-                    {result.unmatchedCriteria.length === 0 ? (
-                      <div className="p-3 rounded-xl bg-[#F7F8FC] text-center text-[#667085]">
-                        All mandatory requirements satisfied.
-                      </div>
-                    ) : (
-                      <div className="space-y-1.5">
-                        {result.unmatchedCriteria.map((c) => (
-                          <div
-                            key={c.label}
-                            className="p-2.5 rounded-xl bg-red-50/50 border border-red-100 flex flex-col justify-between"
-                          >
-                            <span className="font-semibold text-[#17213A]">{c.label}</span>
-                            <span className="text-[10px] text-red-700 font-medium mt-0.5">
-                              Provider requires: {c.requiredValue} (You: {c.studentValue})
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Bottom Bar: Award Amount & Action */}
-                <div className="pt-3 border-t border-[#E7E9F0] flex items-center justify-between">
-                  <div className="text-xs">
-                    <span className="text-[#667085]">Award: </span>
-                    <span className="font-extrabold text-[#17213A]">
-                      {formatCurrencyINR(scholarship.awardAmount)}
-                    </span>
-                    <span className="text-[#667085]"> • {scholarship.awardType}</span>
-                  </div>
-
-                  <Link
-                    href={`/scholarships/${scholarship.id}`}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#5145CD] hover:bg-[#4338B8] text-white text-xs font-semibold shadow-sm transition-all"
-                  >
-                    <span>View Scholarship Full Brief</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
-                </div>
-              </div>
-            );
-          })}
+          {filteredMatches.map(({ scholarship, result }) => (
+            <MatchCard
+              key={scholarship.id}
+              scholarship={scholarship}
+              result={result}
+              isSaved={savedIds.includes(scholarship.id)}
+              onToggleSave={toggleSaveScholarship}
+            />
+          ))}
         </div>
       </div>
     </AppShell>

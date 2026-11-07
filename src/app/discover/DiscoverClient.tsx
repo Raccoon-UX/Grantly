@@ -118,8 +118,11 @@ export default function DiscoverClient({ initialSearch = '' }: { initialSearch?:
     return map;
   }, [scholarships, getMatchResult]);
 
-  // Filtered & Sorted Scholarships
+  // Filtered & Sorted Scholarships (fast-path for default state to minimize hydration time)
   const filteredScholarships = useMemo(() => {
+    if (!hasActiveFilters) {
+      return scholarships;
+    }
     return scholarships
       .filter((s) => {
         // Search query: title, provider, description, tags
@@ -194,6 +197,7 @@ export default function DiscoverClient({ initialSearch = '' }: { initialSearch?:
         return relScoreB - relScoreA;
       });
   }, [
+    hasActiveFilters,
     scholarships,
     searchQuery,
     selectedLevel,

@@ -22,7 +22,7 @@ interface SidebarProps {
   onCloseMobile?: () => void;
 }
 
-export function Sidebar({ onCloseMobile }: SidebarProps) {
+function SidebarComponent({ onCloseMobile }: SidebarProps) {
   const pathname = usePathname();
   const { stats, profile, resetDemoData } = useGrantly();
 
@@ -189,3 +189,5 @@ export function Sidebar({ onCloseMobile }: SidebarProps) {
     </aside>
   );
 }
+
+export const Sidebar = React.memo(SidebarComponent);

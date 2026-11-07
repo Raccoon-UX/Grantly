@@ -60,17 +60,17 @@ export default function DashboardPage() {
         <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#3526A8] via-[#5145CD] to-[#7868F6] p-6 sm:p-8 text-white shadow-elevated">
           {/* Subtle decorative geometric overlay */}
           <div
-            className="absolute -right-10 -bottom-10 w-72 h-72 rounded-full bg-white/10 blur-2xl pointer-events-none"
+            className="absolute -right-10 -bottom-10 w-72 h-72 rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.15)_0%,transparent_70%)] pointer-events-none"
             aria-hidden="true"
           />
           <div
-            className="absolute right-24 -top-12 w-48 h-48 rounded-full bg-[#EDEBFF]/20 blur-xl pointer-events-none"
+            className="absolute right-24 -top-12 w-48 h-48 rounded-full bg-[radial-gradient(circle,rgba(237,235,255,0.25)_0%,transparent_70%)] pointer-events-none"
             aria-hidden="true"
           />
 
           <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             <div className="space-y-2 max-w-2xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-xs font-semibold tracking-wide border border-white/20">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 text-xs font-semibold tracking-wide border border-white/20">
                 <Sparkles className="w-3.5 h-3.5 text-[#EDEBFF]" />
                 <span>Smart Opportunity Hub</span>
               </div>
@@ -90,7 +90,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Profile completion widget */}
-            <div className="flex-shrink-0 bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20 min-w-[260px]">
+            <div className="flex-shrink-0 bg-white/15 p-4 rounded-2xl border border-white/20 min-w-[260px]">
               <div className="flex items-center justify-between text-xs mb-2">
                 <span className="font-semibold text-white/90">Profile Completeness</span>
                 <span className="font-extrabold text-white">{stats.profileCompletionPercent}%</span>
